@@ -1,0 +1,44 @@
+Dewangga Vito Smaradhana - 00000107630
+
+01. When a user takes a picture, that picture is stored in a path based on the given
+URI. In which part of the code handles this? (Copy that part of the code as the
+answer)
+Jawab: 
+Bagian kode yang menangani proses penyimpanan adalah method insertToStore di dalam ProviderFileManager.kt
+Proses penyalinan data dari URI yang dihasilkan kamera ke URI permanen di MediaStore ditangani oleh baris 
+IOUtils.copy(inputStream, outputStream)
+
+private fun insertToStore (fileInfo: FileInfo, contentUri: Uri,
+                          contentValues: ContentValues) {
+    executor.execute {
+        val insertedUri = contentResolver.insert(contentUri,
+            contentValues)
+        insertedUri?.let {
+            val inputStream =
+                contentResolver.openInputStream(fileInfo.uri)
+            val outputStream =
+                contentResolver.openOutputStream(insertedUri)
+            IOUtils.copy(inputStream, outputStream)
+        }
+    }
+}
+
+02. In your FileInfo.kt, there are 5 attributes. On the first attribute, what does the URI
+refer to? And on the fourth attribute, what does relativePath refer to?
+Jawab:
+URI Merujuk pada URI sementara (Temporary URI) yang dibuat oleh FileProvider untuk mengakses file dari aplikasi lain (yaitu aplikasi kamera). 
+	URI ini hanya berlaku untuk sesi pengambilan gambar saat ini dan membatasi akses dari aplikasi lain.
+
+relativePath Merujuk pada jalur relatif (folder tujuan) di mana file akan disimpan secara permanen di External Storage menggunakan MediaStore 
+	(contoh: Environment.DIRECTORY_PICTURES atau Environment.DIRECTORY_MOVIES).
+
+03. [Bonus] Explain the chronological order from when a user takes a picture until
+the file is stored in the MediaStore.
+
+a. Minta Izin & Siapkan URI, Pengguna menekan tombol Photo. openImageCapture() dipanggil.
+b. Buat FileInfo, openImageCapture() memanggil providerFileManager.generatePhotoUri() untuk membuat objek file, dan URI sementara.
+c. Launch Camera, takePictureLauncher.launch() dipanggil, meneruskan URI Sementara tersebut.
+d. setelah take a picture, launcher menerima result. Callback registerForActivityResult di takePictureLauncher dijalankan.
+e. Penyimpanan, Callback ini memanggil providerFileManager.insertImageToStore().
+f. Insert to MediaStore, insertImageToStore() memanggil insertToStore(). contentResolver.insert() dipanggil untuk meminta MediaStore membuat entri baru, menghasilkan URI Permanen (insertedUri).
+g. Salin Data, ContentResolver akan membuka dua stream yaitu inputStream dan outputStream. IOUtils.copy(inputStream, outputStream) menyalin semua data gambar dari file sementara ke lokasi MediaStore yang permanen.
